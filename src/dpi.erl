@@ -10,6 +10,7 @@
 
 -include("dpiContext.hrl").
 -include("dpiConn.hrl").
+-include("dpiPool.hrl").
 -include("dpiStmt.hrl").
 -include("dpiData.hrl").
 -include("dpiVar.hrl").

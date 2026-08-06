@@ -190,6 +190,7 @@ typedef struct
     ErlNifMutex *lock;
     unsigned long dpiContext_count;
     unsigned long dpiConn_count;
+    unsigned long dpiPool_count;
     unsigned long dpiStmt_count;
     unsigned long dpiData_count;
     unsigned long dpiDataPtr_count;

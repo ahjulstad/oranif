@@ -5,6 +5,7 @@
 #include "dpi_nif.h"
 #include "dpiContext_nif.h"
 #include "dpiConn_nif.h"
+#include "dpiPool_nif.h"
 #include "dpiStmt_nif.h"
 #include "dpiQueryInfo_nif.h"
 #include "dpiData_nif.h"
@@ -22,6 +23,7 @@ DPI_NIF_FUN(resource_count);
 static ErlNifFunc nif_funcs[] = {
     DPICONTEXT_NIFS,
     DPICONN_NIFS,
+    DPIPOOL_NIFS,
     DPISTMT_NIFS,
     DPIDATA_NIFS,
     DPIVAR_NIFS,
@@ -44,6 +46,9 @@ DPI_NIF_FUN(resource_count)
     enif_make_map_put(
         env, ret, enif_make_atom(env, "connection"),
         enif_make_ulong(env, st->dpiConn_count), &ret);
+    enif_make_map_put(
+        env, ret, enif_make_atom(env, "pool"),
+        enif_make_ulong(env, st->dpiPool_count), &ret);
     enif_make_map_put(
         env, ret, enif_make_atom(env, "statement"),
         enif_make_ulong(env, st->dpiStmt_count), &ret);
@@ -136,11 +141,13 @@ static int load(ErlNifEnv *env, void **priv_data, ERL_NIF_TERM load_info)
     st->dpiData_count = 0;
     st->dpiStmt_count = 0;
     st->dpiConn_count = 0;
+    st->dpiPool_count = 0;
     st->dpiContext_count = 0;
     st->dpiDataPtr_count = 0;
 
     DEF_RES(dpiContext);
     DEF_RES(dpiConn);
+    DEF_RES(dpiPool);
     DEF_RES(dpiStmt);
     DEF_RES(dpiData);
     DEF_RES(dpiDataPtr);
@@ -184,6 +191,7 @@ static int upgrade(
     st->dpiData_count = old_st->dpiData_count;
     st->dpiStmt_count = old_st->dpiStmt_count;
     st->dpiConn_count = old_st->dpiConn_count;
+    st->dpiPool_count = old_st->dpiPool_count;
     st->dpiContext_count = old_st->dpiContext_count;
     st->dpiDataPtr_count = old_st->dpiDataPtr_count;
 
