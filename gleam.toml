@@ -1,0 +1,11 @@
+name = "oranif_runtime"
+version = "0.1.0"
+target = "erlang"
+build_tools = ["rebar3"]
+
+description = "Gleam package wrapper for the Erlang oranif runtime"
+licences = ["Apache-2.0"]
+
+[dependencies]
+
+[dev_dependencies]
