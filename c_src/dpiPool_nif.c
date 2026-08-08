@@ -37,6 +37,8 @@ DPI_NIF_FUN(pool_create)
 
     dpiContext_res *contextRes = NULL;
     ErlNifBinary userName, password, connectString;
+    const char *userNamePtr = NULL;
+    const char *passwordPtr = NULL;
     size_t commonParamsMapSize = 0;
     size_t poolParamsMapSize = 0;
 
@@ -111,6 +113,15 @@ DPI_NIF_FUN(pool_create)
             commonParams.nencoding = nencodeStr;
         }
     }
+
+    if (userName.size == 0)
+        userNamePtr = NULL;
+    else
+        userNamePtr = (const char *)userName.data;
+    if (password.size == 0)
+        passwordPtr = NULL;
+    else
+        passwordPtr = (const char *)password.data;
 
     if (poolParamsMapSize > 0)
     {
@@ -205,8 +216,8 @@ DPI_NIF_FUN(pool_create)
         contextRes->context,
         dpiPool_create(
             contextRes->context,
-            (const char *)userName.data, userName.size,
-            (const char *)password.data, password.size,
+            userNamePtr, userName.size,
+            passwordPtr, password.size,
             (const char *)connectString.data, connectString.size,
             &commonParams,
             &poolParams,

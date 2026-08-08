@@ -8,6 +8,7 @@
 
 ERL_NIF_TERM ATOM_encoding = 0;
 ERL_NIF_TERM ATOM_nencoding = 0;
+ERL_NIF_TERM ATOM_external_auth = 0;
 
 ErlNifResourceType *dpiConn_type;
 
@@ -26,6 +27,7 @@ DPI_NIF_FUN(conn_create)
     size_t commonParamsMapSize = 0;
     if (!enif_get_resource(env, argv[0], dpiContext_type, (void **)&contextRes))
         BADARG_EXCEPTION(0, "resource context");
+    size_t connParamsMapSize = 0;
     if (!enif_inspect_binary(env, argv[1], &userName))
         BADARG_EXCEPTION(1, "string/binary userName");
     if (!enif_inspect_binary(env, argv[2], &password))
@@ -34,11 +36,20 @@ DPI_NIF_FUN(conn_create)
         BADARG_EXCEPTION(3, "string/binary connectString");
     if (!enif_get_map_size(env, argv[4], &commonParamsMapSize))
         BADARG_EXCEPTION(4, "map commonParams");
+    if (!enif_get_map_size(env, argv[5], &connParamsMapSize))
+        BADARG_EXCEPTION(5, "map connCreateParams");
 
     dpiCommonCreateParams commonParams;
     RAISE_EXCEPTION_ON_DPI_ERROR(
         contextRes->context,
         dpiContext_initCommonCreateParams(contextRes->context, &commonParams));
+    dpiConnCreateParams connParams;
+    RAISE_EXCEPTION_ON_DPI_ERROR(
+        contextRes->context,
+        dpiContext_initConnCreateParams(contextRes->context, &connParams));
+
+    const char *userNamePtr = userName.size > 0 ? (const char *)userName.data : NULL;
+    const char *passwordPtr = password.size > 0 ? (const char *)password.data : NULL;
 
     if (commonParamsMapSize > 0)
     {
@@ -69,6 +80,23 @@ DPI_NIF_FUN(conn_create)
             commonParams.nencoding = nencodeStr;
         }
     }
+    if (connParamsMapSize > 0)
+    {
+        // lazy create
+        if (!(ATOM_external_auth))
+            ATOM_external_auth = enif_make_atom(env, "external_auth");
+
+        ERL_NIF_TERM mapval;
+        if (enif_get_map_value(env, argv[5], ATOM_external_auth, &mapval))
+        {
+            if (enif_compare(mapval, ATOM_TRUE) == 0)
+                connParams.externalAuth = 1;
+            else if (enif_compare(mapval, ATOM_FALSE) == 0)
+                connParams.externalAuth = 0;
+            else
+                BADARG_EXCEPTION(5, "bool connCreateParams.external_auth");
+        }
+    }
 
     dpiConn_res *connRes;
     ALLOC_RESOURCE(connRes, dpiConn);
@@ -76,11 +104,11 @@ DPI_NIF_FUN(conn_create)
     RAISE_EXCEPTION_ON_DPI_ERROR_RESOURCE(
         contextRes->context,
         dpiConn_create(
-            contextRes->context, (const char *)userName.data, userName.size,
-            (const char *)password.data, password.size,
+            contextRes->context, userNamePtr, userName.size,
+            passwordPtr, password.size,
             (const char *)connectString.data, connectString.size,
             &commonParams,
-            NULL, // TODO implement connCreateParams
+            &connParams,
             &connRes->conn),
         connRes, dpiConn);
 
