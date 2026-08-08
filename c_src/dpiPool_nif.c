@@ -39,17 +39,37 @@ DPI_NIF_FUN(pool_create)
     ErlNifBinary userName, password, connectString;
     const char *userNamePtr = NULL;
     const char *passwordPtr = NULL;
+<<<<<<< Updated upstream
+=======
+    uint32_t userNameLen = 0;
+    uint32_t passwordLen = 0;
+>>>>>>> Stashed changes
     size_t commonParamsMapSize = 0;
     size_t poolParamsMapSize = 0;
 
     if (!enif_get_resource(env, argv[0], dpiContext_type, (void **)&contextRes))
         BADARG_EXCEPTION(0, "resource context");
-    if (!enif_inspect_binary(env, argv[1], &userName))
-        BADARG_EXCEPTION(1, "binary userName");
-    if (!enif_inspect_binary(env, argv[2], &password))
-        BADARG_EXCEPTION(2, "binary password");
+    if (enif_compare(argv[1], ATOM_NULL) == 0)
+    {
+        userName.data = NULL;
+        userName.size = 0;
+    }
+    else if (!enif_inspect_binary(env, argv[1], &userName))
+        BADARG_EXCEPTION(1, "binary or null userName");
+    if (enif_compare(argv[2], ATOM_NULL) == 0)
+    {
+        password.data = NULL;
+        password.size = 0;
+    }
+    else if (!enif_inspect_binary(env, argv[2], &password))
+        BADARG_EXCEPTION(2, "binary or null password");
     if (!enif_inspect_binary(env, argv[3], &connectString))
         BADARG_EXCEPTION(3, "binary connectString");
+
+    userNamePtr = (const char *)userName.data;
+    userNameLen = userName.size;
+    passwordPtr = (const char *)password.data;
+    passwordLen = password.size;
     if (!enif_get_map_size(env, argv[4], &commonParamsMapSize))
         BADARG_EXCEPTION(4, "map commonParams");
     if (!enif_get_map_size(env, argv[5], &poolParamsMapSize))
@@ -209,6 +229,14 @@ DPI_NIF_FUN(pool_create)
         }
     }
 
+    if (poolParams.externalAuth)
+    {
+        if (userNameLen == 0)
+            userNamePtr = NULL;
+        if (passwordLen == 0)
+            passwordPtr = NULL;
+    }
+
     dpiPool_res *poolRes;
     ALLOC_RESOURCE(poolRes, dpiPool);
 
@@ -216,8 +244,13 @@ DPI_NIF_FUN(pool_create)
         contextRes->context,
         dpiPool_create(
             contextRes->context,
+<<<<<<< Updated upstream
             userNamePtr, userName.size,
             passwordPtr, password.size,
+=======
+            userNamePtr, userNameLen,
+            passwordPtr, passwordLen,
+>>>>>>> Stashed changes
             (const char *)connectString.data, connectString.size,
             &commonParams,
             &poolParams,
@@ -225,6 +258,7 @@ DPI_NIF_FUN(pool_create)
         poolRes, dpiPool);
 
     poolRes->context = contextRes->context;
+    poolRes->externalAuth = poolParams.externalAuth;
 
     RETURNED_TRACE;
     return enif_make_resource(env, poolRes);
@@ -276,15 +310,18 @@ DPI_NIF_FUN(pool_acquireConnection)
     else
         BADARG_EXCEPTION(2, "binary or null password");
 
+    RAISE_EXCEPTION_ON_DPI_ERROR(
+        poolRes->context,
+        dpiContext_initConnCreateParams(poolRes->context, &connParams));
+
+    if (poolRes->externalAuth)
+        connParams.externalAuth = 1;
+
     if (argc == 4)
     {
         hasConnParams = 1;
         if (!enif_get_map_size(env, argv[3], &connParamsMapSize))
             BADARG_EXCEPTION(3, "map connCreateParams");
-
-        RAISE_EXCEPTION_ON_DPI_ERROR(
-            poolRes->context,
-            dpiContext_initConnCreateParams(poolRes->context, &connParams));
 
         if (!(ATOM_tag | ATOM_match_any_tag | ATOM_purity | ATOM_conn |
               ATOM_out_tag | ATOM_out_tag_found | ATOM_out_new_session))
@@ -329,6 +366,9 @@ DPI_NIF_FUN(pool_acquireConnection)
             }
         }
     }
+
+    if (poolRes->externalAuth)
+        hasConnParams = 1;
 
     dpiConn_res *connRes;
     ALLOC_RESOURCE(connRes, dpiConn);

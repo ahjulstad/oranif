@@ -8,6 +8,7 @@ typedef struct
 {
     dpiPool *pool;
     dpiContext *context;
+    int externalAuth;
 } dpiPool_res;
 
 extern ErlNifResourceType *dpiPool_type;

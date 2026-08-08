@@ -25,6 +25,7 @@ DPI_NIF_FUN(conn_create)
     dpiContext_res *contextRes;
     ErlNifBinary userName, password, connectString;
     size_t commonParamsMapSize = 0;
+    size_t connParamsMapSize = 0;
     if (!enif_get_resource(env, argv[0], dpiContext_type, (void **)&contextRes))
         BADARG_EXCEPTION(0, "resource context");
     size_t connParamsMapSize = 0;
@@ -83,6 +84,23 @@ DPI_NIF_FUN(conn_create)
     if (connParamsMapSize > 0)
     {
         // lazy create
+        if (!(ATOM_external_auth))
+            ATOM_external_auth = enif_make_atom(env, "external_auth");
+
+        ERL_NIF_TERM mapval;
+        if (enif_get_map_value(env, argv[5], ATOM_external_auth, &mapval))
+        {
+            if (enif_compare(mapval, ATOM_TRUE) == 0)
+                connParams.externalAuth = 1;
+            else if (enif_compare(mapval, ATOM_FALSE) == 0)
+                connParams.externalAuth = 0;
+            else
+                BADARG_EXCEPTION(5, "bool connCreateParams.external_auth");
+        }
+    }
+
+    if (connParamsMapSize > 0)
+    {
         if (!(ATOM_external_auth))
             ATOM_external_auth = enif_make_atom(env, "external_auth");
 
