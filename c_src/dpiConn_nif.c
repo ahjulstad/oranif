@@ -28,7 +28,6 @@ DPI_NIF_FUN(conn_create)
     size_t connParamsMapSize = 0;
     if (!enif_get_resource(env, argv[0], dpiContext_type, (void **)&contextRes))
         BADARG_EXCEPTION(0, "resource context");
-    size_t connParamsMapSize = 0;
     if (!enif_inspect_binary(env, argv[1], &userName))
         BADARG_EXCEPTION(1, "string/binary userName");
     if (!enif_inspect_binary(env, argv[2], &password))

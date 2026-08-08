@@ -39,11 +39,8 @@ DPI_NIF_FUN(pool_create)
     ErlNifBinary userName, password, connectString;
     const char *userNamePtr = NULL;
     const char *passwordPtr = NULL;
-<<<<<<< Updated upstream
-=======
     uint32_t userNameLen = 0;
     uint32_t passwordLen = 0;
->>>>>>> Stashed changes
     size_t commonParamsMapSize = 0;
     size_t poolParamsMapSize = 0;
 
@@ -244,13 +241,8 @@ DPI_NIF_FUN(pool_create)
         contextRes->context,
         dpiPool_create(
             contextRes->context,
-<<<<<<< Updated upstream
-            userNamePtr, userName.size,
-            passwordPtr, password.size,
-=======
             userNamePtr, userNameLen,
             passwordPtr, passwordLen,
->>>>>>> Stashed changes
             (const char *)connectString.data, connectString.size,
             &commonParams,
             &poolParams,
